@@ -50,6 +50,11 @@ export function setupInput({ canvas, renderer, localPlayerId, towerCatalog, enem
 
   function renderSendMenu() {
     const opponents = players.filter((p) => p.id !== localPlayerId);
+    if (opponents.length === 0) {
+      sendMenuEl.innerHTML = '<h3>Send at</h3><p class="hint">Playing solo — no opponents to send pests at.</p>';
+      return;
+    }
+
     const targetOptions = opponents.map((p) => {
       const faction = FACTION_INFO[p.faction] || { emoji: '❔' };
       return `<button type="button" class="catalog-btn${p.id === selectedTargetId ? ' selected' : ''}" data-target="${p.id}">

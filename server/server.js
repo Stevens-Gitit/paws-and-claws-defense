@@ -115,7 +115,7 @@ io.on('connection', (socket) => {
     const room = getRoomOfSocket(socket);
     if (!room || room.state !== 'lobby') return;
     if (room.hostId !== socket.id) return;
-    if (room.players.size !== catalog.FACTIONS.length) return;
+    if (room.players.size < 1 || room.players.size > catalog.FACTIONS.length) return;
     const players = Array.from(room.players.values());
     if (!players.every((p) => p.faction && p.ready)) return;
 

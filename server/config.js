@@ -6,6 +6,5 @@ module.exports = {
   WAVE_INTERVAL_MS: 20000,
   CANVAS: { W: 1200, H: 760 },
   LANE_COUNT: 3,
-  LANE_WIDTH: 380,
   LANE_GUTTER: 30,
 };

@@ -2,7 +2,6 @@
 // no balance numbers live here. Keep in sync with the server if the path/slots ever change.
 
 export const CANVAS = { W: 1200, H: 760 };
-export const LANE_WIDTH = 380;
 export const LANE_GUTTER = 30;
 export const LANE_COUNT = 3;
 
@@ -43,16 +42,23 @@ export const FACTION_INFO = {
 export const ENEMY_EMOJI = { bug: '🐛', cricket: '🦗', beetle: '🪲' };
 export const TOWER_EMOJI = { claw: '🐾', sniper: '🎯', yarn: '🧶' };
 
-export function laneLeftFor(laneIndex) {
-  return LANE_GUTTER + laneIndex * (LANE_WIDTH + LANE_GUTTER);
+export function laneWidthFor(totalLanes) {
+  return (CANVAS.W - LANE_GUTTER * (totalLanes + 1)) / totalLanes;
 }
 
-export function computeAbsoluteWaypoints(laneIndex) {
-  const laneLeft = laneLeftFor(laneIndex);
-  return LANE_WAYPOINTS.map((wp) => ({ x: laneLeft + wp.x * LANE_WIDTH, y: wp.y * CANVAS.H }));
+export function laneLeftFor(laneIndex, totalLanes) {
+  const laneWidth = laneWidthFor(totalLanes);
+  return LANE_GUTTER + laneIndex * (laneWidth + LANE_GUTTER);
 }
 
-export function computeAbsoluteSlots(laneIndex) {
-  const laneLeft = laneLeftFor(laneIndex);
-  return TOWER_SLOTS.map((s) => ({ id: s.id, x: laneLeft + s.x * LANE_WIDTH, y: s.y * CANVAS.H }));
+export function computeAbsoluteWaypoints(laneIndex, totalLanes) {
+  const laneLeft = laneLeftFor(laneIndex, totalLanes);
+  const laneWidth = laneWidthFor(totalLanes);
+  return LANE_WAYPOINTS.map((wp) => ({ x: laneLeft + wp.x * laneWidth, y: wp.y * CANVAS.H }));
+}
+
+export function computeAbsoluteSlots(laneIndex, totalLanes) {
+  const laneLeft = laneLeftFor(laneIndex, totalLanes);
+  const laneWidth = laneWidthFor(totalLanes);
+  return TOWER_SLOTS.map((s) => ({ id: s.id, x: laneLeft + s.x * laneWidth, y: s.y * CANVAS.H }));
 }

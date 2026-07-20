@@ -45,24 +45,25 @@ export function updateLobbyControls({ readyBtn, startBtn, hintEl, players, local
   readyBtn.disabled = !me || !me.faction;
   readyBtn.textContent = me && me.ready ? 'Not Ready' : 'Ready';
 
-  const full = players.length === 3;
-  const allSet = full && players.every((p) => p.faction && p.ready);
+  const allSet = players.length >= 1 && players.every((p) => p.faction && p.ready);
+  const canGrow = players.length < 3;
+  const modeLabel = players.length === 1 ? 'solo' : players.length === 2 ? '2-player' : '3-player';
 
   if (isHost) {
     startBtn.classList.remove('hidden');
     startBtn.disabled = !allSet;
-    hintEl.textContent = !full
-      ? `Waiting for ${3 - players.length} more player(s)...`
-      : allSet
-        ? 'All set — start the match!'
-        : 'Waiting for everyone to pick a faction and ready up...';
+    hintEl.textContent = !allSet
+      ? 'Waiting for everyone to pick a faction and ready up...'
+      : canGrow
+        ? `Ready for a ${modeLabel} match — start now, or wait for up to ${3 - players.length} more to join.`
+        : 'All set — start the match!';
   } else {
     startBtn.classList.add('hidden');
-    hintEl.textContent = !full
-      ? `Waiting for ${3 - players.length} more player(s)...`
-      : allSet
-        ? 'Waiting for host to start the match...'
-        : 'Waiting for everyone to pick a faction and ready up...';
+    hintEl.textContent = !allSet
+      ? 'Waiting for everyone to pick a faction and ready up...'
+      : canGrow
+        ? `Ready for a ${modeLabel} match — waiting for the host to start (or for more players to join).`
+        : 'Waiting for host to start the match...';
   }
 }
 

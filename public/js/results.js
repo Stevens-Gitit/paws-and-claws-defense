@@ -8,7 +8,7 @@ export function renderResults(container, matchEnd, localPlayerId) {
       <li>
         <span>${info.emoji}</span>
         <span>${escapeHtml(r.name)}${r.playerId === localPlayerId ? ' (You)' : ''}</span>
-        <span class="tag">#${r.placement}${r.placement === 1 ? ' 🏆' : ''}</span>
+        <span class="tag">#${r.placement}${r.placement === 1 ? ' 🏆' : ''} · Wave ${r.survivedWave}</span>
       </li>
     `;
   }).join('');

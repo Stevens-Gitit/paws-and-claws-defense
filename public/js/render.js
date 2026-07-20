@@ -10,10 +10,11 @@ export function createRenderer(canvas, players) {
   const slotsByPlayer = new Map();
   const nameByPlayer = new Map();
 
+  const totalLanes = players.length;
   players.forEach((p, i) => {
     laneIndexByPlayer.set(p.id, i);
-    waypointsByPlayer.set(p.id, computeAbsoluteWaypoints(i));
-    slotsByPlayer.set(p.id, computeAbsoluteSlots(i));
+    waypointsByPlayer.set(p.id, computeAbsoluteWaypoints(i, totalLanes));
+    slotsByPlayer.set(p.id, computeAbsoluteSlots(i, totalLanes));
     nameByPlayer.set(p.id, p.name);
   });
 

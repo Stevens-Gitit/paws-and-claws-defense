@@ -1,23 +1,30 @@
 const config = require('./config');
 const { TOWER_TYPES, ENEMY_TYPES, LANE_WAYPOINTS, TOWER_SLOTS, scaledEnemyHp, getWaveSpawnList } = require('./catalog');
 
-function laneLeftFor(laneIndex) {
-  return config.LANE_GUTTER + laneIndex * (config.LANE_WIDTH + config.LANE_GUTTER);
+function laneWidthFor(totalLanes) {
+  return (config.CANVAS.W - config.LANE_GUTTER * (totalLanes + 1)) / totalLanes;
 }
 
-function computeAbsoluteWaypoints(laneIndex) {
-  const laneLeft = laneLeftFor(laneIndex);
+function laneLeftFor(laneIndex, totalLanes) {
+  const laneWidth = laneWidthFor(totalLanes);
+  return config.LANE_GUTTER + laneIndex * (laneWidth + config.LANE_GUTTER);
+}
+
+function computeAbsoluteWaypoints(laneIndex, totalLanes) {
+  const laneLeft = laneLeftFor(laneIndex, totalLanes);
+  const laneWidth = laneWidthFor(totalLanes);
   return LANE_WAYPOINTS.map((wp) => ({
-    x: laneLeft + wp.x * config.LANE_WIDTH,
+    x: laneLeft + wp.x * laneWidth,
     y: wp.y * config.CANVAS.H,
   }));
 }
 
-function computeAbsoluteSlots(laneIndex) {
-  const laneLeft = laneLeftFor(laneIndex);
+function computeAbsoluteSlots(laneIndex, totalLanes) {
+  const laneLeft = laneLeftFor(laneIndex, totalLanes);
+  const laneWidth = laneWidthFor(totalLanes);
   return TOWER_SLOTS.map((s) => ({
     id: s.id,
-    x: laneLeft + s.x * config.LANE_WIDTH,
+    x: laneLeft + s.x * laneWidth,
     y: s.y * config.CANVAS.H,
   }));
 }
@@ -49,10 +56,11 @@ function pointAtProgress(absWaypoints, cumDist, totalLength, progress) {
 
 function createMatchState(room) {
   const playerIds = Array.from(room.players.keys());
+  const totalLanes = playerIds.length;
   const lanes = {};
   playerIds.forEach((playerId, laneIndex) => {
     const player = room.players.get(playerId);
-    const absWaypoints = computeAbsoluteWaypoints(laneIndex);
+    const absWaypoints = computeAbsoluteWaypoints(laneIndex, totalLanes);
     const { cumDist, totalLength } = computePathMetrics(absWaypoints);
     lanes[playerId] = {
       playerId,
@@ -69,7 +77,7 @@ function createMatchState(room) {
       absWaypoints,
       cumDist,
       totalLength,
-      slots: computeAbsoluteSlots(laneIndex),
+      slots: computeAbsoluteSlots(laneIndex, totalLanes),
     };
   });
 
@@ -132,16 +140,30 @@ function sendEnemy(matchState, senderId, targetPlayerId, enemyType) {
 
 function buildResults(matchState, winnerId) {
   const results = [];
-  if (winnerId) results.push({ playerId: winnerId, placement: 1 });
+  if (winnerId) results.push({ playerId: winnerId, placement: 1, survivedWave: matchState.waveNumber });
   const reversedEliminated = [...matchState.resultsOrder].reverse();
   const startPlacement = winnerId ? 2 : 1;
-  reversedEliminated.forEach((playerId, idx) => {
-    results.push({ playerId, placement: startPlacement + idx });
+  reversedEliminated.forEach((entry, idx) => {
+    results.push({ playerId: entry.playerId, placement: startPlacement + idx, survivedWave: entry.atWave });
   });
   return results.map((r) => {
     const lane = matchState.lanes[r.playerId];
-    return { playerId: r.playerId, name: lane.name, faction: lane.faction, placement: r.placement };
+    return { playerId: r.playerId, name: lane.name, faction: lane.faction, placement: r.placement, survivedWave: r.survivedWave };
   });
+}
+
+// A 1-player match has no opponent to "win" against, so it only ends when
+// that player's own base falls — a survival run, not a last-standing contest.
+function checkMatchEnd(matchState) {
+  if (matchState.status !== 'active') return null;
+  const totalPlayers = Object.keys(matchState.lanes).length;
+  const alive = Object.values(matchState.lanes).filter((l) => !l.eliminated);
+  const shouldEnd = totalPlayers === 1 ? alive.length === 0 : alive.length <= 1;
+  if (!shouldEnd) return null;
+
+  matchState.status = 'ended';
+  const winnerId = alive.length === 1 ? alive[0].playerId : null;
+  return { winnerId, results: buildResults(matchState, winnerId) };
 }
 
 function buildSnapshot(matchState) {
@@ -267,18 +289,12 @@ function tick(matchState) {
       lane.eliminated = true;
       lane.enemies = [];
       lane.towers = [];
-      matchState.resultsOrder.push(lane.playerId);
+      matchState.resultsOrder.push({ playerId: lane.playerId, atWave: matchState.waveNumber });
       newlyEliminated.push(lane.playerId);
     }
   }
 
-  let matchEnd = null;
-  const alive = Object.values(matchState.lanes).filter((l) => !l.eliminated);
-  if (alive.length <= 1) {
-    matchState.status = 'ended';
-    const winnerId = alive.length === 1 ? alive[0].playerId : null;
-    matchEnd = { winnerId, results: buildResults(matchState, winnerId) };
-  }
+  const matchEnd = checkMatchEnd(matchState);
 
   return { snapshot: buildSnapshot(matchState), newlyEliminated, matchEnd };
 }
@@ -290,15 +306,9 @@ function forceEliminate(matchState, playerId) {
   lane.eliminated = true;
   lane.enemies = [];
   lane.towers = [];
-  matchState.resultsOrder.push(playerId);
+  matchState.resultsOrder.push({ playerId, atWave: matchState.waveNumber });
 
-  let matchEnd = null;
-  const alive = Object.values(matchState.lanes).filter((l) => !l.eliminated);
-  if (alive.length <= 1 && matchState.status === 'active') {
-    matchState.status = 'ended';
-    const winnerId = alive.length === 1 ? alive[0].playerId : null;
-    matchEnd = { winnerId, results: buildResults(matchState, winnerId) };
-  }
+  const matchEnd = checkMatchEnd(matchState);
   return { newlyEliminated: [playerId], matchEnd };
 }
 
