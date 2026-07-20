@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paws &amp; Claws Defense</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- HOME SCREEN -->
+  <section id="screen-home" class="screen">
+    <div class="panel">
+      <h1>🐾 PAWS &amp; CLAWS DEFENSE</h1>
+      <p class="subtitle">3-player tower defense — Cats vs Rats vs Dogs. Defend your base, send pests at your rivals.</p>
+      <label>Your name
+        <input id="input-name" type="text" maxlength="16" placeholder="Player" />
+      </label>
+
+      <div class="row">
+        <button id="btn-create" class="btn primary">Create Room</button>
+      </div>
+
+      <div class="divider">or join a room</div>
+
+      <div class="row">
+        <input id="input-code" type="text" maxlength="4" placeholder="CODE" class="code-input" />
+        <button id="btn-join" class="btn">Join Room</button>
+      </div>
+
+      <p id="home-error" class="error"></p>
+    </div>
+  </section>
+
+  <!-- LOBBY SCREEN -->
+  <section id="screen-lobby" class="screen hidden">
+    <div class="panel lobby-panel">
+      <h2>Room <span id="lobby-code"></span></h2>
+      <p class="subtitle">3 players, 3 factions. Pick one to begin.</p>
+
+      <div id="faction-picker" class="faction-grid"></div>
+
+      <ul id="lobby-players" class="player-list"></ul>
+
+      <div class="row">
+        <button id="btn-ready" class="btn" disabled>Ready</button>
+        <button id="btn-start" class="btn primary hidden">Start Match</button>
+      </div>
+      <p class="hint" id="lobby-hint"></p>
+    </div>
+  </section>
+
+  <!-- COUNTDOWN OVERLAY -->
+  <div id="overlay-countdown" class="overlay hidden">
+    <div id="countdown-number">3</div>
+  </div>
+
+  <!-- MATCH SCREEN -->
+  <div id="screen-match" class="hidden">
+    <div id="match-hud">
+      <div id="hud-wave">Wave 0</div>
+      <div id="hud-gold">💰 0</div>
+      <div id="hud-hp">❤️ 0</div>
+    </div>
+    <div id="match-body">
+      <div id="build-menu" class="side-panel"></div>
+      <canvas id="td-canvas"></canvas>
+      <div id="send-menu" class="side-panel"></div>
+    </div>
+    <div id="toast-area"></div>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <section id="screen-results" class="screen hidden">
+    <div class="panel">
+      <h2>🏆 Match Results</h2>
+      <ol id="results-list" class="player-list"></ol>
+      <div class="row">
+        <button id="btn-rematch" class="btn primary">Back to Lobby</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

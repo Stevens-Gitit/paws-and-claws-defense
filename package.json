@@ -1,0 +1,13 @@
+{
+  "name": "paws-and-claws-defense",
+  "version": "1.0.0",
+  "description": "Paws & Claws Defense — 3-player free-for-all tower defense (Cats vs Rats vs Dogs)",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}
